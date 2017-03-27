@@ -17,22 +17,13 @@ Description
   Create new file "{prefix}-{yyyymmdd}-{x}.fext", for x = {1,...,N}.
 
   The TXT file is for compilation a la DISTANCE, and the TEX file is
-  for direct printing a la JOURNAL.
+  for printing a la JOURNAL.
 
 EOF
 }
 function file_exists {
 
-    if [ -f "${1}".txt ]
-    then
-	return 0
-
-    elif [ -f "${1}".tex ]
-    then
-	return 0
-    else
-	return 1
-    fi
+    return 
 }
 
 #
@@ -59,9 +50,10 @@ fi
 #
 file=${prefix}-${yyyymmdd}-${index}
 
-while [ file_exists ${file} ]
+while [ -f "${file}".txt ]||[ -f "${file}".tex ]
 do
     index=$(( ${index} + 1 ))
+
     file=${prefix}-${yyyymmdd}-${index}
 done
 
