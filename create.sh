@@ -24,7 +24,7 @@ EOF
 
 #
 if [ -n "${1}" ]
-do
+then
     case "${1}" in
 
 	tex)
@@ -43,7 +43,7 @@ do
 else
     usage
     exit 1
-done
+fi
 
 #
 file=${prefix}-${yyyymmdd}-${index}.${fext}
