@@ -21,6 +21,19 @@ Description
 
 EOF
 }
+function file_exists {
+
+    if [ -f "${1}".txt ]
+    then
+	return 0
+
+    elif [ -f "${1}".tex ]
+    then
+	return 0
+    else
+	return 1
+    fi
+}
 
 #
 if [ -n "${1}" ]
@@ -30,11 +43,9 @@ then
 	tex)
 	    fext=tex
 	    ;;
-
 	txt)
 	    fext=txt
 	    ;;
-
 	*)
 	    usage
 	    exit 1
@@ -46,13 +57,15 @@ else
 fi
 
 #
-file=${prefix}-${yyyymmdd}-${index}.${fext}
+file=${prefix}-${yyyymmdd}-${index}
 
-while [ -f ${file} ]
+while [ file_exists ${file} ]
 do
     index=$(( ${index} + 1 ))
-    file=${prefix}-${yyyymmdd}-${index}.txt
+    file=${prefix}-${yyyymmdd}-${index}
 done
+
+file=${file}.${fext}
 
 #
 if [ 'txt' = "${fext}" ]
