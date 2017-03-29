@@ -185,6 +185,17 @@ done
 #          * ( {prefix}-YYYYMMDD-X.RRR | {prefix}-YYYYMMDD-X.txt |
 #                {prefix}-YYYYMMDD.RRR | {prefix}-YYYYMMDD.txt )?
 #
+#          * S^{*} = { 
+#                       {p-A-{1,2..,N}.y, p-A.z},
+#                       {p-B-{1,2..,N}.y, p-B.z},
+#                         ...,
+#                       {p-D-{1,2..,N}.y, p-D.z}
+#                    }
+#
+
+#
+# Unlike S^{*} which wants p-D.y > p-D-I.y,
+# 'sort -V' returns p-D-I.y > p-D.y.
 #
 if [ -n "${ref}" ]
 then
@@ -208,58 +219,82 @@ else
 fi
 
 #
+# The following needs to ensure that [ -f p.D.y ] > [ -f p.D-I.y ]
+# for all 'y'.
+#
 if [ -n "${file}" ]&&[ -f "${file}" ]
 then
 
     digits=$(echo ${file} | sed "s%${prefix}-%%; s%\..*\$%%;" )
 
+    digits_date=$(echo "${digits}" | sed 's%-.$%%;')
+
+    digits_item=$(echo "${digits}" | sed "s%${digits_date}%%; s%-%%;")
+
     #
-    if [ "0" != "${del_date}" ] || [ "0" != "${del_item}" ]
+    # Reference sequence arithemtic
+    #
+    if [ "0" != "${del_item}" ]
     then
-	base_date=$(echo "${digits}" | sed 's%-.$%%;')
-
-	base_item=$(echo "${digits}" | sed "s%${base_date}%%; s%-%%;")
-
-	if [ "0" != "${del_item}" ]
-	then
-	    base_item=$(( ${base_item} ${del_item} ))
-	fi
-
-	if [ "0" != "${del_date}" ]
-	then
-	    base_date=$(( ${base_date} ${del_date} ))
-	fi
-
-	base="${prefix}-${base_date}-${base_item}"
-    else
-	base="${prefix}-${digits}"
+	digits_item=$(( ${digits_item} ${del_item} ))
     fi
 
+    if [ "0" != "${del_date}" ]
+    then
+	digits_date=$(( ${digits_date} ${del_date} ))
+    fi
+
+    #
+    # Reference series abstraction
     #
     if [ -n "${subtitle}" ]
     then
-	base="${base}-${subtitle}"
+	base="${prefix}-${digits_date}-${digits_item}-${subtitle}"
+
+    elif [ "0" != "${del_item}" ]
+    then
+
+	base="${prefix}-${digits_date}-${digits_item}"
+
+    elif [ -f "${prefix}-${digits_date}.tex" ]
+    then
+
+	base="${prefix}-${digits_date}"
+
+    else
+	base="${prefix}-${digits_date}-${digits_item}"
     fi
 
     #
-    if [ '*' = "${fext}" ]||[ -f "${base}.${fext}" ]
+    # File selection option
+    #
+    if [ '*' = "${fext}" ]
     then
 	file="${base}.${fext}"
+
+	echo "${file}"
+	exit 0
+
+    elif [ -n "${fext}" ]&&[ -f "${base}.${fext}" ]
+    then
+	file="${base}.${fext}"
+
+	echo "${file}"
+	exit 0
 
     elif [ -f "${base}.txt" ]
     then
 	file="${base}.txt"
 
+	echo "${file}"
+	exit 0
+
     elif [ -f "${base}.tex" ]
     then
+
 	file="${base}.tex"
-    fi
 
-    #
-    if [ -n "${file}" ]&&[ -f "${file}" ]
-    then
 	echo "${file}"
-
 	exit 0
     else
 	cat<<EOF>&2

@@ -2,7 +2,7 @@
 
 function flog {
 
-    if log=$(git log ${file} | tail -n 1 | awk '{print $1}') && [ -n "${log}" ]
+    if log=$(2>/dev/null git log ${file} | tail -n 1 | awk '{print $1}') && [ -n "${log}" ]
     then
 	echo ${log}
 
@@ -26,7 +26,7 @@ then
 	exit 1
     fi
 
-elif file=$(./file.sh $* ) && [ -n "${file}" ]
+elif file=$(./file.sh $* ) &&[ -n "${file}" ]
 then
 
     if flog "${file}"

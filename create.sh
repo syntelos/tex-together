@@ -1,88 +1,84 @@
 #!/bin/bash
 
 prefix=together
-
+subtitle=''
 yyyymmdd=$(yyyymmdd)
 index=1
-fext=''
 
 function usage {
     cat<<EOF>&2
 Synopsis
 
-  $0 (txt|tex)
+  $0 
 
 Description
 
-  Create new file "{prefix}-{yyyymmdd}-{x}.fext", for x = {1,...,N}.
+  Create new file "{prefix}-{yyyymmdd}-{x}.txt", for x = {1,...,N}.
 
-  The TXT file is for compilation a la DISTANCE, and the TEX file is
-  for printing a la JOURNAL.
+
+Synopsis
+
+  $0 %p'prefix'
+
+Description
+
+  Create new file "{prefix}-{yyyymmdd}-{x}.txt".
+
+
+Synopsis
+
+  $0 %s'subtitle'
+
+Description
+
+  Create new file "{prefix}-{yyyymmdd}-{x}-{subtitle}.txt".
+
 
 EOF
 }
-function file_exists {
-
-    return 
-}
 
 #
-if [ -n "${1}" ]
-then
+while [ -n "${1}" ]
+do
     case "${1}" in
 
-	tex)
-	    fext=tex
+	%p*)
+	    prefix=$(echo "${1}" | sed 's^%p^^')
 	    ;;
-	txt)
-	    fext=txt
+
+	%s*)
+	    subtitle=$(echo "${1}" | sed 's^%s^^')
 	    ;;
+
 	*)
 	    usage
 	    exit 1
 	    ;;
     esac
-else
-    usage
-    exit 1
-fi
-
-#
-file=${prefix}-${yyyymmdd}-${index}
-
-while [ -f "${file}".txt ]||[ -f "${file}".tex ]
-do
-    index=$(( ${index} + 1 ))
-
-    file=${prefix}-${yyyymmdd}-${index}
+    shift
 done
 
-file=${file}.${fext}
+#
+file=${prefix}-${yyyymmdd}-${index}.txt
+
+while [ -f ${file} ]
+do
+    index=$(( ${index} + 1 ))
+    file=${prefix}-${yyyymmdd}-${index}.txt
+done
 
 #
-if [ 'txt' = "${fext}" ]
+if [ -n "${subtitle}" ]
 then
-    cat<<EOF>${file}
-
-
-EOF
-elif [ 'tex' = "${fext}" ]
-then
-    cat<<EOF>${file}
-\input preamble-png
-
-
-\bye
-EOF
-
-else
-    cat<<EOF>&2
-$0 error internal FEXT '${fext}' unrecognized
-EOF
-    exit 1
+    file=${prefix}-${yyyymmdd}-${index}-${subtitle}.txt
 fi
 
 #
+cat<<EOF>${file}
+
+
+EOF
+
 echo ${file}
 
 git add ${file}

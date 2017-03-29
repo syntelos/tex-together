@@ -29,7 +29,7 @@ then
 	cat<<EOF>${ftgt}
 \input book
 
-\centerline{\bf Distance}
+\centerline{\bf Together}
 \centerline{\it ${day}, ${date}}
 
 
