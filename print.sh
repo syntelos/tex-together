@@ -39,7 +39,7 @@ EOF
     fi
 
     #
-    if [ -n "$(egrep '^\\input preamble' ${src} )" ]
+    if [ -n "$(egrep '^\\input ' ${src} )" ]
     then
 
 	compiler='tex'

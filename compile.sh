@@ -55,11 +55,35 @@ EOF
 
 	    for srcf in ${flist} 
 	    do
-		echo >>${ftgt}
-		echo "\vfill">>${ftgt}
-		echo "\break">>${ftgt}
-		echo >>${ftgt}
-		cat ${srcf} >> ${ftgt}
+		case "${srcf}" in
+
+		    *-[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9].[a-z][a-z][a-z])
+			#
+			# (reprocessing {ftgt})
+			#
+			;;
+
+		    *)
+			echo >>${ftgt}
+			echo "\vfill">>${ftgt}
+			echo "\break">>${ftgt}
+			echo >>${ftgt}
+
+			case "${srcf}" in
+			    *.txt)
+				cat ${srcf} >> ${ftgt}
+				;;
+			    *.tex)
+				egrep -v '^\\(input|bye)' ${srcf} >> ${ftgt}
+				;;
+			    *)
+				1>&2 echo "$0 error processing flist fext in '${srcf}'."
+				exit 1
+				;;
+			esac
+			;;
+		esac
+			
 	    done
 
 	    cat<<EOF>>${ftgt}
@@ -79,13 +103,13 @@ EOF
 
     else
 	cat<<EOF>&2
-$0 error processing today's 'together' files.
+$0 error processing today's '${prefix}' files.
 EOF
 	exit 1
     fi
 else
     cat<<EOF>&2
-$0 error listing today's 'together' files.
+$0 error listing today's '${prefix}' files.
 EOF
     exit 1
 fi
