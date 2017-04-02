@@ -26,7 +26,7 @@ then
 	exit 1
     fi
 
-elif file=$(./file.sh $* ) &&[ -n "${file}" ]
+elif file=$(2>/dev/null ./file.sh $* ) &&[ -n "${file}" ]&&[ -f "${file}" ]
 then
 
     if flog "${file}"
@@ -37,7 +37,7 @@ then
     fi
 else
     cat<<EOF>&2
-$0 error in file lookup via './file.sh'.
+$0 error in file lookup.
 EOF
     exit 1
 fi
