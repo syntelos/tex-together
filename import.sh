@@ -2,28 +2,62 @@
 
 overwrite=false
 
+ref=$(yyyymmdd)
+
 src_pr=journal
 src_fx=tex
 
-tgt_pr=together
+tgt_pr=distance
 tgt_fx=txt
 
 
 function usage {
     cat<<EOF>&2
 
+
 Synopsis
 
- $0 [-s src-name] [-o] 
+ $0 [-o] 
 
 Description
 
- Import today's '*.${src_fx}' from '${src_pr}'.
+ Import today's '${src_fx}' from '${src_pr}' into '${tgt_pr}' with
+ '${tgt_fx}'.
 
- Optionally redefine source from '${src_pr}' 
- to 'src-name'.
+ Optionally overwrite (local directory) target from source.
+
+
+Synopsis
+
+ $0 -r YYYYMMDD
+
+Description
+
+ Import the referenced selection, '${src_pr}-RRRRRRRR-*.${src_fx}'
+ into '${tgt_pr}' with '${tgt_fx}'.
+
+
+Synopsis
+
+ $0 [-sp prefix1] [-sx fext1] [-tp prefix2] [-tx fext2]
+
+Description
+
+ Optionally redefine source prefix from '${src_pr}' to 'prefix1', or
+ target prefix from '${tgt_pr}' to 'prefix2' within the local
+ directory.
+
+ Optionally redefine source filename extension from '${src_fx}' to
+ 'fext1', or target filename extension from '${tgt_fx}' to 'fext2'.
 
  Optionally overwrite target from source.
+
+
+Sources
+
+ Note that the source prefix will be employed as an external sibling
+ directory location, as well as a file naming prefix, when that
+ directory (../{prefix}) exists.
 
 EOF
 }
@@ -37,15 +71,71 @@ do
 	    shift
 	    ;;
 
-	-s)
+	-r)
 	    shift
-	    if [ -n "${1}" ]&&[ -d ../"${1}" ]
+	    if [ -n "${1}" ]
+	    then
+		ref="${1}"
+		shift
+	    else
+		cat<<EOF>&2
+$0 error missing argument to '-r'.
+EOF
+		exit 1
+	    fi
+	    ;;
+
+	-sp)
+	    shift
+	    if [ -n "${1}" ]
 	    then
 		src_pr="${1}"
 		shift
 	    else
 		cat<<EOF>&2
-$0 error in argument source '${1}' is not a directory '../${1}'.
+$0 error missing argument to '-sp'.
+EOF
+		exit 1
+	    fi
+	    ;;
+
+	-tp)
+	    shift
+	    if [ -n "${1}" ]
+	    then
+		tgt_pr="${1}"
+		shift
+	    else
+		cat<<EOF>&2
+$0 error missing argument to '-tp'.
+EOF
+		exit 1
+	    fi
+	    ;;
+
+	-sx)
+	    shift
+	    if [ -n "${1}" ]&&[ -n "$(echo ${1} | egrep '^[a-z][a-z][a-z]$')" ]
+	    then
+		src_fx="${1}"
+		shift
+	    else
+		cat<<EOF>&2
+$0 error missing or unrecognized argument to -sx '${1}' (does not match rexp '[a-z][a-z][a-z]').
+EOF
+		exit 1
+	    fi
+	    ;;
+
+	-tx)
+	    shift
+	    if [ -n "${1}" ]&&[ -n "$(echo ${1} | egrep '^[a-z][a-z][a-z]$')" ]
+	    then
+		tgt_fx="${1}"
+		shift
+	    else
+		cat<<EOF>&2
+$0 error missing or unrecognized argument to -tx '${1}' (does not match rexp '[a-z][a-z][a-z]').
 EOF
 		exit 1
 	    fi
@@ -58,12 +148,11 @@ EOF
     esac
 done
 
-src_re="../${src_pr}/${src_pr}-$(yyyymmdd)-*.${src_fx}"
+#
+#
+function imp {
 
-if src_flist=$(2>/dev/null ls ${src_re} | sort -V) && [ -n "${src_flist}" ]
-then
-
-    for src in ${src_flist}
+    for src in $*
     do
 	tgt=$(basename ${src} .${src_fx} | sed "s/${src_pr}/${tgt_pr}/").${tgt_fx}
 
@@ -93,7 +182,29 @@ then
 	fi
 
     done
-    exit 0
+}
+
+src_re="${src_pr}-${ref}-*.${src_fx}"
+
+if [ -d "../${src_pr}" ]&& src_flist=$(2>/dev/null ls ../${src_pr}/${src_re} | sort -V) && [ -n "${src_flist}" ] 
+then
+
+    if imp ${src_flist}
+    then
+	exit 0
+    else
+	exit 1
+    fi
+
+elif src_flist=$(2>/dev/null ls ${src_re} | sort -V) && [ -n "${src_flist}" ] 
+then
+
+    if imp ${src_flist}
+    then
+	exit 0
+    else
+	exit 1
+    fi
 else
     cat<<EOF>&2
 $0 error file '${src_re}' not found.
