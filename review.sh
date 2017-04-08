@@ -1,64 +1,62 @@
 #!/bin/bash
 
-fext=txt
-
-function usage {
-  cat<<EOF
-Synopsis
-
-  $0 -d [0-9]* 
-
-Description
-
-  Review a number of documents producing a temp file of query
-  responses.  The argument is a date pattern, e.g. "201701" or 
-  prefix.
-
-
-Synopsis
-
-  $0 [0-9]* 
-
-Description
-
-  Review a number of documents following a date pattern, e.g. "201701"
-  or prefix.
-
-EOF
-  exit 1
-}
-
 2>/dev/null rm /tmp/review.* 
 
 log=/tmp/review.$$
 
 r_del=false
 
-re=$(yyyymmdd)
+function usage {
+    cat<<EOF>&2
+
+
+Synopsis
+
+  $0
+
+Description
+
+  Display files listed by './flist.sh \$*' using 'less'.
+
+
+Synopsis
+
+  $0 [-d]
+
+Description
+
+  After each file display (less quit) ask for input to log to file
+  '/tmp/review'.
+
+
+Synopsis
+
+  $0 [-?|-h|--help]
+
+Description
+
+  This message.
+
+
+EOF
+}
+#
+if [ -n "${1}" ]
+then
+    if [ '-d' = "${1}" ]
+    then
+	r_del=true
+	shift
+
+    elif [ '-?' = "${1}" ]||[ '-h' = "${1}" ]||[ '--help' = "${1}" ]
+    then
+	usage
+	exit 1
+    fi
+fi
 
 #
-while [ -n "${1}" ]
-do
-    case "${1}" in
-	[0-9]*)
-	    re="${1}"
-	    ;;
-	[a-z-]*)
-	    re="${1}"
-	    ;;
-	-d)
-	    r_del=true
-	    ;;
-	*)
-	    usage
-	    exit 1
-	    ;;
-    esac
-    shift
-done
-
-#
-if flist=$(2>/dev/null ls *${re}*.${fext} | sort -V ) && [ -n "${flist}" ]
+if flist=$(./flist.sh $* ) && [ -n "${flist}" ]
 then
  for src in ${flist}
  do
