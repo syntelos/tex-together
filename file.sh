@@ -77,7 +77,7 @@ EOF
 
 #
 #
-fext=''
+fext=tex
 del_date=0
 del_item=0
 subtitle=''
@@ -141,21 +141,9 @@ do
 done
 
 #
-#  REQS
+# REQS
 #
-#    To date the requirements for this script have excluded the
-#    "blind" or "nonexistent" or "create" case.  It is only
-#    responsible for identifying files that exist at the time it runs.
-#    This attribute of its requirements closes the difference between
-#    referencing and generating, as represented by REQS-REF-QUERY and
-#    REQS-REF-CANON.
-#
-#    Note the case of ( p-x-y.f | p-x.f ), beyond ( p-x-y.f ), the
-#    selection of {p-x.f} over {p-x-y.f} is a subtlety left to 'sort
-#    -V', 'tail -n 1', and the temporal work flow process.
-#
-#
-#    REF-GENER
+#   REQ-REF-GENER
 #
 #     The output of a nonexistent file reference is the "generate" or
 #     "generative" case, also known as the "blind" or "nonexistent" or
@@ -165,148 +153,94 @@ done
 #     filter-exclude the output for its own existence-expectation
 #     requirement.
 #
+#     The output of a nonexistent file reference (see "GEN++", below)
+#     is performed with user input FEXT.  
 #
-#    REF-QUERY
-#
-#      When the request/expectation is relatively concrete
-#
-#        * Last in sequence referenced by {X{,Y{,Z}}}
-#
-#          * ( RRRRRR-RRRRRRRR-R.RRR | {prefix}-YYYYMMDD-X.txt |
-#                RRRRRR-RRRRRRRR.RRR | {prefix}-YYYYMMDD.txt )?
+#              git mv $(./file.sh #old) $(./file.sh new)
 #
 #
-#    REF-CANON
+#   REQ-REF-QUERY
 #
-#      When the request/expectation is relatively abstract
+#     (See ../distance/file.sh)
 #
-#        * Last in sequence known to S^{*}
+#   REQ-REF-CANON
 #
-#          * ( {prefix}-YYYYMMDD-X.RRR | {prefix}-YYYYMMDD-X.txt |
-#                {prefix}-YYYYMMDD.RRR | {prefix}-YYYYMMDD.txt )?
+#     (See ../distance/file.sh)
 #
-#          * S^{*} = { 
-#                       {p-A-{1,2..,N}.y, p-A.z},
-#                       {p-B-{1,2..,N}.y, p-B.z},
-#                         ...,
-#                       {p-D-{1,2..,N}.y, p-D.z}
-#                    }
-#
-
-#
-# Unlike S^{*} which wants p-D.y > p-D-I.y,
-# 'sort -V' returns p-D-I.y > p-D.y.
 #
 if [ -n "${ref}" ]
 then
 
-    if [ -n "${fext}" ]&&[ ! '*' = "${fext}" ]
-    then
-	file=$(2>/dev/null ls ${prefix}-*.* | sort -V | egrep -e "${ref}" | egrep -ve '[0-9][0-9][0-9][0-9][0-9][0-9]-[1-9]-[a-zA-Z]' | egrep "\.${fext}\$" | tail -n 1 )
-    else
-	file=$(2>/dev/null ls ${prefix}-*.* | sort -V | egrep -e "${ref}" | egrep -ve '[0-9][0-9][0-9][0-9][0-9][0-9]-[1-9]-[a-zA-Z]' | tail -n 1 )
-    fi
+    file=$(2>/dev/null ls ${prefix}-*.{txt,tex,png,pdf} | sort -V | egrep -e "${ref}" | head -n 1 )
 
 else
 
-    if [ -n "${fext}" ]&&[ ! '*' = "${fext}" ]
-    then
-	file=$(2>/dev/null ls ${prefix}-*.* | sort -V | egrep -ve '[0-9][0-9][0-9][0-9][0-9][0-9]-[1-9]-[a-zA-Z]' | egrep "\.${fext}\$" | tail -n 1 )
-    else
-	file=$(2>/dev/null ls ${prefix}-*.* | sort -V | egrep -ve '[0-9][0-9][0-9][0-9][0-9][0-9]-[1-9]-[a-zA-Z]' | tail -n 1 )
-    fi
+    file=$(2>/dev/null ls ${prefix}-*.{txt,tex,png,pdf} | sort -V | egrep -e '[0-9][0-9][0-9][0-9][0-9][0-9]-[0-9]-[a-zA-Z]' | tail -n 1 )
 
 fi
 
-#
-# The following needs to ensure that [ -f p.D.y ] > [ -f p.D-I.y ]
-# for all 'y'.
 #
 if [ -n "${file}" ]&&[ -f "${file}" ]
 then
 
     digits=$(echo ${file} | sed "s%${prefix}-%%; s%\..*\$%%;" )
 
-    digits_date=$(echo "${digits}" | sed 's%-.$%%;')
-
-    digits_item=$(echo "${digits}" | sed "s%${digits_date}%%; s%-%%;")
-
     #
-    # Reference sequence arithemtic
-    #
-    if [ "0" != "${del_item}" ]
+    if [ "0" != "${del_date}" ] || [ "0" != "${del_item}" ]
     then
-	digits_item=$(( ${digits_item} ${del_item} ))
+	base_date=$(echo "${digits}" | sed 's%-.$%%;')
+
+	base_item=$(echo "${digits}" | sed "s%${base_date}%%; s%-%%;")
+
+	if [ "0" != "${del_item}" ]
+	then
+	    base_item=$(( ${base_item} ${del_item} ))
+	fi
+
+	if [ "0" != "${del_date}" ]
+	then
+	    base_date=$(( ${base_date} ${del_date} ))
+	fi
+
+	base="${prefix}-${base_date}-${base_item}"
+    else
+	base="${prefix}-${digits}"
     fi
 
-    if [ "0" != "${del_date}" ]
-    then
-	digits_date=$(( ${digits_date} ${del_date} ))
-    fi
-
-    #
-    # Reference series abstraction
     #
     if [ -n "${subtitle}" ]
     then
-	base="${prefix}-${digits_date}-${digits_item}-${subtitle}"
-
-    elif [ "0" != "${del_item}" ]
-    then
-
-	base="${prefix}-${digits_date}-${digits_item}"
-
-    elif [ -f "${prefix}-${digits_date}.tex" ]
-    then
-
-	base="${prefix}-${digits_date}"
-
-    else
-	base="${prefix}-${digits_date}-${digits_item}"
+	base="${base}-${subtitle}"
     fi
 
     #
-    # File selection option
-    #
-    if [ '*' = "${fext}" ]
+    if [ '*' = "${fext}" ] #||[ -f "${base}.${fext}" ]
     then
 	file="${base}.${fext}"
 
-	echo "${file}"
-	exit 0
-
-    elif [ -n "${fext}" ]&&[ -f "${base}.${fext}" ]
+    elif [ -n "${fext}" ]
     then
-	file="${base}.${fext}"
+	file="${base}.${fext}"  ## (GEN++)
 
-	echo "${file}"
-	exit 0
+    elif [ -f "${base}.tex" ]
+    then
+	file="${base}.tex"
 
     elif [ -f "${base}.txt" ]
     then
 	file="${base}.txt"
 
-	echo "${file}"
-	exit 0
-
-    elif [ -f "${base}.tex" ]
-    then
-
-	file="${base}.tex"
-
-	echo "${file}"
-	exit 0
     else
-	cat<<EOF>&2
-$0: file not found.
-EOF
-	exit 1
+	file="${base}.${fext}"
     fi
+
+    #
+    echo "${file}"
+
+    exit 0
+
 else
 
-    cat<<EOF>&2
-$0: file not found.
-EOF
+    1>&2 echo "$0 error, file not found."
     exit 1
 fi
-

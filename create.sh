@@ -3,7 +3,7 @@
 prefix=together
 subtitle=''
 yyyymmdd=$(yyyymmdd)
-index=1
+
 
 function usage {
     cat<<EOF>&2
@@ -13,7 +13,7 @@ Synopsis
 
 Description
 
-  Create new file "{prefix}-{yyyymmdd}-{x}.txt", for x = {1,...,N}.
+  Create new file "{prefix}-{yyyymmdd}-{x}.tex", for x = {0,...,N}.
 
 
 Synopsis
@@ -22,7 +22,7 @@ Synopsis
 
 Description
 
-  Create new file "{prefix}-{yyyymmdd}-{x}.txt".
+  Create new file "{prefix}-{yyyymmdd}-{x}.tex".
 
 
 Synopsis
@@ -31,7 +31,7 @@ Synopsis
 
 Description
 
-  Create new file "{prefix}-{yyyymmdd}-{x}-{subtitle}.txt".
+  Create new file "{prefix}-{yyyymmdd}-{x}-{subtitle}.tex".
 
 
 EOF
@@ -59,24 +59,50 @@ do
 done
 
 #
-file=${prefix}-${yyyymmdd}-${index}.txt
+# REQ-IX-ONE
+#
+#  Accept imports from manually generated indexing
+#
+index=1
+file=${prefix}-${yyyymmdd}-${index}.tex
 
-while [ -f ${file} ]
-do
-    index=$(( ${index} + 1 ))
-    file=${prefix}-${yyyymmdd}-${index}.txt
-done
+if [ -f ${file} ]
+then
+    
+    while [ -f ${file} ]
+    do
+	index=$(( ${index} + 1 ))
+	file=${prefix}-${yyyymmdd}-${index}.tex
+    done
+else
+    #
+    # REQ-IX-ZERO
+    #
+    #  Produce machine generated indexing
+    #
+    index=0
+    file=${prefix}-${yyyymmdd}-${index}.tex
+
+    while [ -f ${file} ]
+    do
+	index=$(( ${index} + 1 ))
+	file=${prefix}-${yyyymmdd}-${index}.tex
+    done
+fi
 
 #
 if [ -n "${subtitle}" ]
 then
-    file=${prefix}-${yyyymmdd}-${index}-${subtitle}.txt
+    file=${prefix}-${yyyymmdd}-${index}-${subtitle}.tex
 fi
 
 #
 cat<<EOF>${file}
+\input preamble
 
 
+
+\bye
 EOF
 
 echo ${file}

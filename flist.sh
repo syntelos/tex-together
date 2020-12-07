@@ -89,10 +89,6 @@ while [ -n "${1}" ]
 do
     case "${1}" in
 
-	%p*)
-	    prefix=$(echo "${1}" | sed 's^%p^^')
-	    ;;
-
 	[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9])
 
 	    ref="${1}"
@@ -112,12 +108,7 @@ do
 done
 
 #
-if [ -n "${fext}" ]&& flist=$(2>/dev/null ls ${prefix}-*.${fext} | sort -V | egrep -e "${ref}" ) && [ -n "${flist}" ]
-then
-
-    serialize ${flist}
-
-elif flist=$(2>/dev/null ls ${prefix}-*.tex | sort -V | egrep -e "${ref}" ) && [ -n "${flist}" ]
+if flist=$(2>/dev/null ls ${prefix}-*.tex | sort -V | egrep -e "${ref}" ) && [ -n "${flist}" ]
 then
 
     serialize ${flist}

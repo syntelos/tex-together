@@ -1,15 +1,19 @@
 #!/bin/bash
 
-file_txt=$(./file.sh $* txt | egrep '\.txt$')
 
-if [ -n "${file_txt}" ]&&[ -f "${file_txt}" ]
+file_png=$(./file.sh $* png | egrep '\.png$' )
+
+
+
+if [ -n "${file_png}" ]&&[ -f "${file_png}" ]
 then
-    emacs ${file_txt} &
+    gimp ${file_png}  &
 
     exit 0
 else
     cat<<EOF>&2
-$0: file 'txt' not found.
+$0: file 'png' not found.
 EOF
     exit 1
 fi
+
