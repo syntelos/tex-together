@@ -1,5 +1,7 @@
 #!/bin/bash
 
+wd=$(dirname $0)
+
 gen_ps=false
 gen_pdf=false
 gen_png=true
@@ -12,7 +14,7 @@ function usage {
   
 Synopsis
 
-  ${0} [[+-]{ps,pdf,png}] (optional file.sh args)
+  ${0} [[+-]{ps,pdf,png}] (optional current.sh args)
 
 Description
 
@@ -150,7 +152,7 @@ do
 done
 
 #
-src=$(./file.sh $* tex )
+src=$(${wd}/current.sh tex $* )
 
 name=$(basename ${src} .tex)
 

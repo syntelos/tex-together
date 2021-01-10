@@ -19,14 +19,14 @@ Synopsis
 
 Description
 
-    List existing files with default filename extension 'tex'.
+    Lookup existing filename with default filename extension 'tex'.
 
 
     Filename extension
 
         $0 [a-z][a-z][a-z]
 
-        List existing files with argument filename extension in
+        Lookup existing filename with argument filename extension in
 
           {prefix}-{date}-[{subtitle}-]{index}.{ext}.
 
@@ -35,28 +35,29 @@ Description
 
         $0 %p[A-Za-z_0-9]+
 
-        List existing files with argument filename <prefix> in
+        Lookup existing filename with argument filename <prefix> in
 
           {prefix}-{date}-[{subtitle}-]{index}.{ext}
 
 
         $0 %d[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]
 
-        List existing files with argument filename <date> in
+        Lookup existing filename with argument filename <date> in
 
           {prefix}-{date}-[{subtitle}-]{index}.{ext}
 
 
         $0 %s[A-Za-z_0-9]+
 
-        List existing files with argument filename <subtitle> in
+        Lookup existing filename with argument filename <subtitle>
+        in
 
           {prefix}-{date}-[{subtitle}-]{index}.{ext}
 
 
         $0 %i[0-9]
 
-        List existing files with argument filename <index> in
+        Lookup existing filename with argument filename <index> in
 
           {prefix}-{date}-[{subtitle}-]{index}.{ext}
 
@@ -104,7 +105,19 @@ function init_d {
         esac
     done
 
-    echo "*"
+    p="${component_p}-"
+
+    if tgt=$(2>/dev/null ls ${p}* | sort -V | tail -n 1 ) &&[ -n "${tgt}" ]
+    then
+        
+        if tdd=$(echo "${tgt}" | sed "s%${p}%%;" | sed 's%-[0-9]*\.[a-z][a-z][a-z]$%%; s%-[A-Za-z_]*%%;') &&[ -n "${tdd}" ]
+        then
+            echo ${tdd}
+            return 0
+        fi
+    fi
+
+    date +%Y%m%d
     return 0
 }
 component_d=$(init_d)
@@ -121,7 +134,19 @@ function init_i {
         esac
     done
 
-    echo "*"
+    p="${component_p}-${component_d}-"
+
+    if tgt=$(2>/dev/null ls ${p}* | sort -V | tail -n 1 ) && [ -n "${tgt}" ]
+    then
+
+        if n=$(echo "${tgt}" | sed "s%${p}%%; s%\.[a-z][a-z][a-z]\$%%; s%[A-Za-z_]+-%%;") &&[ -n "${n}" ]
+        then
+            echo ${n}
+            return 0
+        fi
+    fi
+
+    echo 0
     return 0
 }
 component_i=$(init_i)
@@ -170,16 +195,14 @@ function init_s {
 
 if component_s=$(init_s) &&[ -n "${component_s}" ]
 then
-    re=${component_p}-${component_d}-${component_s}-${component_i}.${component_x}
+    file=${component_p}-${component_d}-${component_s}-${component_i}.${component_x}
 else
-    re=${component_p}-${component_d}-${component_i}.${component_x}
+    file=${component_p}-${component_d}-${component_i}.${component_x}
 fi
 
-1>&2 echo "# 2>/dev/null ls ${re} | sort -V"
-
-if 2>/dev/null ls ${re} | sort -V
+if [ -n "${file}" ]&&[ -f "${file}" ]
 then
-
+    echo "${file}"
     exit 0
 else
     exit 1
