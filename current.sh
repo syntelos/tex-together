@@ -19,14 +19,16 @@ Synopsis
 
 Description
 
-    Formulate today's filename with default filename extension 'tex'.
+    Formulate the current existing filename with default filename
+    extension 'tex'.
 
 
     Filename extension
 
         $0 [a-z][a-z][a-z]
 
-        Formulate today's filename with argument filename extension in
+        Formulate the current filename with argument filename
+        extension in
 
           {prefix}-{date}-[{subtitle}-]{index}.{ext}.
 
@@ -35,21 +37,22 @@ Description
 
         $0 %p[A-Za-z_0-9]+
 
-        Formulate today's filename with argument filename <prefix> in
+        Formulate the current filename with argument filename <prefix>
+        in
 
           {prefix}-{date}-[{subtitle}-]{index}.{ext}
 
 
         $0 %d[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]
 
-        Formulate today's filename with argument filename <date> in
+        Formulate current filename with argument filename <date> in
 
           {prefix}-{date}-[{subtitle}-]{index}.{ext}
 
 
         $0 %s[A-Za-z_0-9]+
 
-        Formulate today's filename with argument filename <subtitle>
+        Formulate current filename with argument filename <subtitle>
         in
 
           {prefix}-{date}-[{subtitle}-]{index}.{ext}
@@ -57,7 +60,7 @@ Description
 
         $0 %i[0-9]
 
-        Formulate today's filename with argument filename <index> in
+        Formulate current filename with argument filename <index> in
 
           {prefix}-{date}-[{subtitle}-]{index}.{ext}
 
@@ -105,8 +108,27 @@ function init_d {
         esac
     done
 
-    date +%Y%m%d
-    return 0
+    today=$(date +%Y%m%d)
+    if [ -n "$(2>/dev/null ls ${component_p}-${today}-* )" ]
+    then
+        echo ${today}
+        return 0
+    else
+
+        if init_d_last="$(2>/dev/null ls ${component_p}-*.tex | sort -V | tail -n 1)" &&[ -n "${init_d_last}" ]
+        then
+            if date=$(echo ${init_d_last} | sed "s%${component_p}-%%; s%-.*%%;") && [ -n "${init_d_last}" ]
+            then
+                echo ${date}
+                return 0
+            else
+                return 1
+            fi
+        else
+            return 1
+        fi  
+    fi
+
 }
 component_d=$(init_d)
 #
