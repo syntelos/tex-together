@@ -1,5 +1,11 @@
 #!/bin/bash
 
+#
+function git {
+  echo git $* 
+}
+
+#
 if [ -f m.db ]&& rm -f /tmp/batch
 then
     idx=0
